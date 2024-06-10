@@ -2,7 +2,8 @@ require('dotenv').config();
 const fs = require('fs');
 const cheerio = require('cheerio');
 const { Command } = require('commander');
-const { saveToJson, saveToCsv, saveToExcel } = require('./modules/saveData');
+const readline = require('readline');
+const { saveToJson, saveToCsv, saveToExcel, saveToPdf } = require('./modules/saveData');
 const generateReport = require('./modules/generateReport');
 const fetchPage = require('./modules/fetchPage');
 const extractData = require('./modules/extractData');
@@ -65,6 +66,8 @@ async function main(queries, outputFormat) {
     await saveToCsv(articlesByQuery, 'articles.csv');
   } else if (outputFormat === 'excel') {
     await saveToExcel(articlesByQuery, 'articles.xlsx');
+  } else if (outputFormat === 'pdf') {
+    await saveToPdf(articlesByQuery, 'articles.pdf');
   }
 
   // Gerar relatório detalhado
@@ -77,14 +80,26 @@ program
   .version('1.0.0')
   .description('Google Scholar Crawler')
   .option('-q, --queries <queries>', 'Consultas de pesquisa separadas por vírgula', val => val.split(','))
-  .option('-f, --format <format>', 'Formato de saída (json, csv, excel)', 'json')
+  .option('-f, --format <format>', 'Formato de saída (json, csv, excel, pdf)', 'json')
   .parse(process.argv);
 
 const options = program.opts();
 
 if (!options.queries) {
-  console.error('Por favor, forneça as consultas de pesquisa usando a opção -q ou --queries.');
-  process.exit(1);
-}
+  // Solicitar ao usuário para digitar a consulta de pesquisa
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
 
-main(options.queries, options.format);
+  rl.question('Digite a(s) consulta(s) de pesquisa separadas por vírgula: ', (input) => {
+    options.queries = input.split(',').map(query => query.trim());
+    rl.question('Digite o formato de saída (json, csv, excel, pdf): ', async (format) => {
+      options.format = format.trim();
+      rl.close();
+      await main(options.queries, options.format);
+    });
+  });
+} else {
+  main(options.queries, options.format);
+}

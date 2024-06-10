@@ -1,6 +1,7 @@
 const fs = require('fs');
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 const ExcelJS = require('exceljs');
+const PDFDocument = require('pdfkit');
 const logger = require('./logger');
 
 function saveToJson(articles, filename) {
@@ -57,8 +58,31 @@ async function saveToExcel(articlesByQuery, filename) {
   logger.info(`Dados salvos em ${filename}`);
 }
 
+async function saveToPdf(articlesByQuery, filename) {
+  const doc = new PDFDocument();
+  doc.pipe(fs.createWriteStream(filename));
+
+  articlesByQuery.forEach((articles, index) => {
+    articles.forEach(article => {
+      doc.fontSize(12).text(`Title: ${article.title}`);
+      doc.fontSize(10).text(`Authors: ${article.authors}`);
+      doc.fontSize(10).text(`Abstract: ${article.abstract}`);
+      doc.fontSize(10).text(`Link: ${article.link}`);
+      doc.fontSize(10).text(`Citations: ${article.citationCount}`);
+      doc.moveDown();
+    });
+    if (index < articlesByQuery.length - 1) {
+      doc.addPage();
+    }
+  });
+
+  doc.end();
+  logger.info(`Dados salvos em ${filename}`);
+}
+
 module.exports = {
   saveToJson,
   saveToCsv,
-  saveToExcel
+  saveToExcel,
+  saveToPdf
 };
