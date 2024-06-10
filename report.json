@@ -1,0 +1,16 @@
+{
+  "totalArticles": 20,
+  "totalCitations": 3,
+  "queryStats": [
+    {
+      "query": 1,
+      "articles": 10,
+      "citations": 0
+    },
+    {
+      "query": 2,
+      "articles": 10,
+      "citations": 3
+    }
+  ]
+}
